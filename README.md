@@ -1,2 +1,248 @@
 # Wicked-Wordstorm
 reading books lightning fast
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wortstrom – Speed Reading</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#14161a;--fg:#f2efe8;--mut:#8b8f98;--line:#2a2d34;--card:#1b1e23;--acc:#ff6b4a;--serif:'Newsreader',Georgia,serif;--sans:'Inter',system-ui,sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f4ee;--fg:#1b1b1d;--mut:#74777e;--line:#dcd9cf;--card:#fff}}
+:root[data-theme="light"]{--bg:#f6f4ee;--fg:#1b1b1d;--mut:#74777e;--line:#dcd9cf;--card:#fff}
+:root[data-theme="dark"]{--bg:#14161a;--fg:#f2efe8;--mut:#8b8f98;--line:#2a2d34;--card:#1b1e23}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:1px solid var(--line);border-radius:8px;padding:.55rem .9rem;cursor:pointer}
+button:hover{border-color:var(--mut)}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.pri{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:600}
+.view{display:none;height:100%;overflow:auto}.view.on{display:block}
+#home{max-width:720px;margin:0 auto;padding:2.5rem 1.25rem}
+h1{font:500 2.4rem/1.1 var(--serif);margin:0 0 .4rem}
+.sub{color:var(--mut);margin:0 0 1.5rem}
+#drop{border:1.5px dashed var(--line);border-radius:12px;padding:2rem 1rem;text-align:center;color:var(--mut);transition:.15s}
+#drop.over{border-color:var(--acc);color:var(--fg)}
+#drop b{color:var(--fg);display:block;font:500 1.2rem var(--serif);margin-bottom:.4rem}
+#imp{margin-top:1rem;color:var(--mut);font-size:.9rem;min-height:1.2rem}
+.bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);width:0}
+h2{font:500 1.3rem var(--serif);margin:2rem 0 .6rem}
+.book{display:flex;align-items:center;gap:1rem;padding:.9rem 0;border-bottom:1px solid var(--line)}
+.book .t{flex:1;min-width:0}.book .t div:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.book .t small{color:var(--mut)}.book .bar{margin-top:.4rem}
+#read{position:relative}
+#stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#guide{position:absolute;left:50%;top:50%;width:0;height:min(220px,40vh);transform:translate(-50%,-50%);border-left:1px solid var(--line)}
+#word{position:relative;font-family:var(--serif);font-size:var(--fs,84px);white-space:pre;line-height:1;display:flex;align-items:baseline}
+#word span{display:block}#wl{text-align:right;width:0;overflow:visible;direction:rtl}
+#wl b,#wr b{font-weight:inherit}
+#pv{color:var(--acc)}
+#hud{position:absolute;left:0;right:0;padding:1rem 1.25rem;display:flex;gap:.6rem;align-items:center;transition:opacity .3s}
+#top{top:0;justify-content:space-between;color:var(--mut);font-size:.9rem}
+#bot{bottom:0;flex-direction:column;align-items:stretch;padding-bottom:1.25rem}
+.row{display:flex;gap:.5rem;align-items:center;justify-content:center;flex-wrap:wrap}
+.hide #hud{opacity:0}.hide{cursor:none}
+#prog{color:var(--mut);font-size:.85rem;text-align:center;font-variant-numeric:tabular-nums}
+input[type=range]{accent-color:var(--acc);width:min(220px,40vw)}
+#wpmv{font-weight:600;min-width:5.5ch;text-align:center;font-variant-numeric:tabular-nums}
+#set{position:absolute;right:1rem;top:3.6rem;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1rem;width:260px;display:none;gap:.7rem;flex-direction:column;font-size:.9rem;z-index:5}
+#set.on{display:flex}#set label{display:flex;justify-content:space-between;align-items:center;gap:.6rem}
+select{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:.3rem}
+#chs{max-width:100px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<section id="home" class="view on">
+  <h1>Wortstrom</h1>
+  <p class="sub">PDF hineinziehen, Tempo wählen, lesen. Alles bleibt auf deinem Gerät.</p>
+  <div id="drop"><b>PDF hier ablegen</b>oder <button class="pri" id="pick">PDF öffnen</button><input type="file" id="file" accept="application/pdf" hidden></div>
+  <div id="imp"></div>
+  <h2>Meine Bücher</h2>
+  <div id="books"><p class="sub">Noch kein Buch importiert.</p></div>
+</section>
+
+<section id="read" class="view">
+  <div id="stage"><div id="guide"></div><div id="word"><span id="wl"></span><span id="pv"></span><span id="wr"></span></div></div>
+  <div id="hud" id="top"><div id="top" style="display:flex;width:100%;justify-content:space-between;align-items:center;color:var(--mut);font-size:.9rem">
+    <button id="back">Bibliothek</button><span id="meta"></span>
+    <span class="row"><select id="chs" title="Kapitel"></select><button id="gear">Einstellungen</button></span></div></div>
+  <div id="set">
+    <label>Schriftgröße <input type="range" id="fs" min="36" max="160" value="84"></label>
+    <label>Schrift <select id="ff"><option value="'Newsreader',Georgia,serif">Serif</option><option value="'Inter',system-ui,sans-serif">Sans</option><option value="ui-monospace,Menlo,monospace">Mono</option></select></label>
+    <label>Darstellung <select id="th"><option value="dark">Dunkel</option><option value="light">Hell</option></select></label>
+    <label>Lange Wörter länger <input type="checkbox" id="lw" checked></label>
+    <label>Pause bei Satzende <input type="checkbox" id="pp" checked></label>
+    <label>Fortschritt zeigen <input type="checkbox" id="sp" checked></label>
+    <button id="fsb">Vollbild</button>
+  </div>
+  <div id="hud" style="bottom:0;flex-direction:column;align-items:stretch;padding-bottom:1.25rem">
+    <div id="prog"></div><div class="bar"><i id="pb"></i></div>
+    <div class="row">
+      <button id="prev" title="←">⏮</button><button id="play" class="pri" style="min-width:5.5rem" title="Leertaste">Start</button><button id="next" title="→">⏭</button>
+      <button id="slow" title="↓">−</button><input type="range" id="wpm" min="60" max="500" step="10" value="250"><button id="fast" title="↑">+</button><span id="wpmv">250 WPM</span>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+/* ---------- Speicher: Bücher in IndexedDB, Einstellungen in localStorage ---------- */
+let dbp=null;
+function db(){return dbp||(dbp=new Promise((res,rej)=>{try{const r=indexedDB.open('wortstrom',1);r.onupgradeneeded=()=>r.result.createObjectStore('books',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}}))}
+const mem=new Map();
+async function dbDo(mode,fn){try{const d=await db();return await new Promise((res,rej)=>{const t=d.transaction('books',mode);const q=fn(t.objectStore('books'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})}catch(e){return null}}
+const saveBook=b=>{mem.set(b.id,b);return dbDo('readwrite',s=>s.put(b))};
+const allBooks=async()=>{const r=await dbDo('readonly',s=>s.getAll());return r||[...mem.values()]};
+const delBook=id=>{mem.delete(id);return dbDo('readwrite',s=>s.delete(id))};
+let S={wpm:250,fs:84,ff:"'Newsreader',Georgia,serif",th:'dark',lw:true,pp:true,sp:true};
+try{Object.assign(S,JSON.parse(localStorage.getItem('ws_set')||'{}'))}catch(e){}
+const saveSet=()=>{try{localStorage.setItem('ws_set',JSON.stringify(S))}catch(e){}};
+
+/* ---------- PDF-Import ---------- */
+const hy=/(\p{L})[-\u00AD]\s*\n\s*(\p{Ll})/gu;
+async function importPDF(file){
+  const imp=$('imp');
+  if(!window.pdfjsLib){imp.textContent='PDF-Bibliothek konnte nicht geladen werden.';return}
+  try{
+    imp.innerHTML='Lese PDF … <div class="bar"><i id="ib"></i></div>';
+    const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+    const pages=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const tc=await (await pdf.getPage(p)).getTextContent();
+      let lines=[],cur='',y=null;
+      for(const it of tc.items){
+        if(y!==null&&Math.abs(it.transform[5]-y)>2){lines.push(cur.trim());cur=''}
+        cur+=it.str+(it.hasEOL?'\n':'');y=it.transform[5];
+      }
+      lines.push(cur.trim());pages.push(lines.filter(Boolean));
+      $('ib').style.width=(p/pdf.numPages*100)+'%';
+      if(p%5===0)await new Promise(r=>setTimeout(r));
+    }
+    // Kopf-/Fußzeilen: kurze Zeilen, die auf vielen Seiten (ohne Ziffern) wiederkehren
+    const cnt={};
+    pages.forEach(l=>new Set([l[0],l[l.length-1]].filter(Boolean).map(s=>s.replace(/\d+/g,'#'))).forEach(k=>cnt[k]=(cnt[k]||0)+1));
+    const rep=new Set(Object.keys(cnt).filter(k=>pages.length>3&&cnt[k]>pages.length*.3&&k.length<80));
+    let text='';
+    pages.forEach(l=>{
+      l=l.filter((s,i)=>!(/^[-–—\s]*\d{1,4}[-–—\s]*$/.test(s))&&!((i===0||i===l.length-1)&&rep.has(s.replace(/\d+/g,'#'))));
+      text+=l.join('\n')+'\n\n';
+    });
+    text=text.replace(hy,'$1$2').replace(/[ \t]+/g,' ');
+    const words=[],chap=[];
+    const chRe=/^(kapitel|chapter|teil|part)\s+([0-9ivxlc]+|\w+)\b.*$/i;
+    for(const para of text.split(/\n\s*\n/)){
+      const first=para.split('\n')[0].trim();
+      if(chRe.test(first)&&first.length<60)chap.push({i:words.length,t:first});
+      para.split(/\s+/).filter(Boolean).forEach(w=>words.push(w));
+      if(words.length)words[words.length-1]+='\u00B6'; // Absatzmarker
+    }
+    if(!words.length){imp.textContent='Kein Text gefunden. Vermutlich ein Scan – OCR ist in dieser Version nicht enthalten.';return}
+    if(!chap.length)chap.push({i:0,t:'Anfang'});
+    const b={id:Date.now()+'',title:file.name.replace(/\.pdf$/i,''),words:words.join(' '),count:words.length,chap,pos:0,pages:pdf.numPages,last:Date.now()};
+    await saveBook(b);
+    imp.textContent=`„${b.title}“ importiert: ${b.count.toLocaleString('de-DE')} Wörter aus ${b.pages} Seiten.`;
+    renderBooks();
+  }catch(e){imp.textContent='Import fehlgeschlagen: '+(e&&e.message||e)}
+}
+/* ---------- Startseite ---------- */
+async function renderBooks(){
+  const bs=(await allBooks()).sort((a,b)=>b.last-a.last),el=$('books');
+  if(!bs.length){el.innerHTML='<p class="sub">Noch kein Buch importiert.</p>';return}
+  el.innerHTML='';
+  bs.forEach(b=>{
+    const pct=Math.round(b.pos/b.count*100),d=document.createElement('div');d.className='book';
+    d.innerHTML=`<div class="t"><div></div><small>${b.count.toLocaleString('de-DE')} Wörter · ${pct} % gelesen</small><div class="bar"><i style="width:${pct}%"></i></div></div><button class="pri">${b.pos?'Weiterlesen':'Lesen'}</button><button title="Löschen">✕</button>`;
+    d.querySelector('.t div').textContent=b.title;
+    const [o,x]=d.querySelectorAll('button');o.onclick=()=>openBook(b);x.onclick=async()=>{await delBook(b.id);renderBooks()};
+    el.appendChild(d)});
+}
+/* ---------- Lesemodus ---------- */
+let B=null,W=[],pos=0,playing=false,timer=null,hideT=null;
+const ORP=n=>n<2?0:n<6?1:n<10?2:n<14?3:4;
+function fmt(n){return n.toLocaleString('de-DE')}
+function show(){
+  let w=W[pos]||'';w=w.replace('\u00B6','');
+  const core=w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,'')||w;
+  const st=w.indexOf(core),o=st+ORP(core.length);
+  $('wl').textContent=w.slice(0,o);$('pv').textContent=w[o]||'';$('wr').textContent=w.slice(o+1);
+  if(!pos||pos%20===0||!playing)progress();
+}
+function progress(){
+  const left=W.length-pos,min=Math.round(left/S.wpm);
+  const h=Math.floor(min/60),m=min%60;
+  $('prog').textContent=S.sp?`Wort ${fmt(pos+1)} / ${fmt(W.length)} · ${Math.round(pos/W.length*100)} % · noch ca. ${h?h+'h ':''}${m}min`:'';
+  $('pb').style.width=(pos/W.length*100)+'%';
+  let c=0;B.chap.forEach((x,i)=>{if(x.i<=pos)c=i});$('chs').value=c;
+  $('meta').textContent=B.title;
+  B.pos=pos;
+}
+function delay(){
+  const w=W[pos]||'',base=60000/S.wpm;let f=1;
+  const len=w.replace(/[^\p{L}\p{N}]/gu,'').length;
+  if(S.lw&&len>8)f+=Math.min(.6,(len-8)*.08);
+  if(S.pp){if(/\u00B6$/.test(w))f+=.8;else if(/[.!?:]["“”»«)]*$/.test(w))f+=.5;else if(/[,;]$/.test(w))f+=.2}
+  return base*f;
+}
+function tick(){
+  if(!playing)return;
+  if(pos>=W.length-1){pause();return}
+  pos++;show();timer=setTimeout(tick,delay());
+}
+function play(){if(playing)return;if(pos>=W.length-1)pos=0;playing=true;$('play').textContent='Pause';show();timer=setTimeout(tick,delay());hideT=setTimeout(()=>$('read').classList.add('hide'),2500)}
+function pause(){playing=false;clearTimeout(timer);$('play').textContent='Start';$('read').classList.remove('hide');progress();persist()}
+const toggle=()=>playing?pause():play();
+function step(d){pos=Math.max(0,Math.min(W.length-1,pos+d));show();progress();if(playing){clearTimeout(timer);timer=setTimeout(tick,delay())}}
+function setWpm(v){S.wpm=Math.max(60,Math.min(500,v));$('wpm').value=S.wpm;$('wpmv').textContent=S.wpm+' WPM';saveSet();if(B)progress()}
+function persist(){if(B){B.pos=pos;B.last=Date.now();saveBook(B)}}
+function openBook(b){
+  B=b;W=b.words.split(' ');pos=Math.min(b.pos||0,W.length-1);
+  $('chs').innerHTML=b.chap.map((c,i)=>`<option value="${i}"></option>`).join('');
+  [...$('chs').options].forEach((o,i)=>o.textContent=b.chap[i].t.slice(0,28));
+  $('home').classList.remove('on');$('read').classList.add('on');show();progress();
+}
+function leave(){pause();persist();if(document.fullscreenElement)document.exitFullscreen();$('read').classList.remove('on');$('home').classList.add('on');$('set').classList.remove('on');renderBooks()}
+/* ---------- Einstellungen anwenden ---------- */
+function applySet(){
+  document.documentElement.dataset.theme=S.th;
+  $('word').style.setProperty('--fs',S.fs+'px');$('word').style.fontFamily=S.ff;
+  $('fs').value=S.fs;$('ff').value=S.ff;$('th').value=S.th;$('lw').checked=S.lw;$('pp').checked=S.pp;$('sp').checked=S.sp;
+  setWpm(S.wpm);
+}
+/* ---------- Events ---------- */
+$('pick').onclick=()=>$('file').click();
+$('file').onchange=e=>e.target.files[0]&&importPDF(e.target.files[0]);
+const dz=$('drop');
+['dragenter','dragover'].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.add('over')}));
+['dragleave','drop'].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.remove('over')}));
+dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&/pdf$/i.test(f.type||f.name))importPDF(f)});
+$('play').onclick=toggle;$('prev').onclick=()=>step(-1);$('next').onclick=()=>step(1);
+$('slow').onclick=()=>setWpm(S.wpm-10);$('fast').onclick=()=>setWpm(S.wpm+10);
+$('wpm').oninput=e=>setWpm(+e.target.value);
+$('back').onclick=leave;$('gear').onclick=()=>$('set').classList.toggle('on');
+$('chs').onchange=e=>{pos=B.chap[+e.target.value].i;show();progress();persist()};
+$('fs').oninput=e=>{S.fs=+e.target.value;applySet();saveSet()};
+$('ff').onchange=e=>{S.ff=e.target.value;applySet();saveSet()};
+$('th').onchange=e=>{S.th=e.target.value;applySet();saveSet()};
+$('lw').onchange=e=>{S.lw=e.target.checked;saveSet()};$('pp').onchange=e=>{S.pp=e.target.checked;saveSet()};
+$('sp').onchange=e=>{S.sp=e.target.checked;progress();saveSet()};
+$('fsb').onclick=()=>document.fullscreenElement?document.exitFullscreen():$('read').requestFullscreen&&$('read').requestFullscreen().catch(()=>{});
+$('read').addEventListener('mousemove',()=>{$('read').classList.remove('hide');clearTimeout(hideT);if(playing)hideT=setTimeout(()=>$('read').classList.add('hide'),2500)});
+document.addEventListener('keydown',e=>{
+  if(!$('read').classList.contains('on')||/SELECT|INPUT/.test(e.target.tagName)&&e.key!==' '&&!e.key.startsWith('Arrow')&&e.key!=='Escape')return;
+  if(e.target.tagName==='SELECT')return;
+  const k=e.key;
+  if(k===' '){e.preventDefault();toggle()}
+  else if(k==='ArrowLeft'){e.preventDefault();step(-1)}
+  else if(k==='ArrowRight'){e.preventDefault();step(1)}
+  else if(k==='ArrowUp'){e.preventDefault();setWpm(S.wpm+10)}
+  else if(k==='ArrowDown'){e.preventDefault();setWpm(S.wpm-10)}
+  else if(k==='Escape'){if(!document.fullscreenElement)leave()}
+});
+window.addEventListener('pagehide',persist);
+applySet();renderBooks();
+</script>
+</body>
+</html>
